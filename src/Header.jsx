@@ -11,7 +11,7 @@ function Header() {
 
   return (
     <header className="site-header">
-      
+      {/* ⬇️ everything inside the header sits in the container */}
       <div className="container">
         <a href="/" className="brand">
           <span className="brand-text">Leaf Watch</span>
