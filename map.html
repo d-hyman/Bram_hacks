@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA NDVI World Map</title>
+    <title>Global Forest Density & NDVI Map</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
         * {
@@ -41,8 +41,8 @@
         
         .map-container {
             width: 100%;
-            max-width: 1200px;
-            height: 600px;
+            max-width: 1400px;
+            height: 700px;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
@@ -60,7 +60,7 @@
             padding: 15px 20px;
             border-radius: 10px;
             margin-top: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             width: 100%;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             display: flex;
@@ -108,27 +108,6 @@
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
-        }
-        
-        .info-box {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            max-width: 1200px;
-            width: 100%;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        
-        .info-box h3 {
-            color: #2d5a3d;
-            margin-bottom: 10px;
-        }
-        
-        .info-box p {
-            color: #333;
-            line-height: 1.6;
-            margin-bottom: 8px;
         }
         
         .legend {
@@ -182,146 +161,322 @@
             padding: 10px 15px;
             border-radius: 5px;
             margin-top: 10px;
-            display: none;
+            font-size: 0.9em;
         }
 
         .status-message.success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
-            display: block;
         }
 
         .status-message.error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-            display: block;
         }
 
         .status-message.info {
             background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
-            display: block;
         }
 
-        .date-suggestions {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 5px;
+        .info-box {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 1400px;
+            width: 100%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .info-box h3 {
+            color: #2d5a3d;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #2d5a3d;
+        }
+
+        .stat-card strong {
+            display: block;
+            color: #2d5a3d;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>🌍 NASA NDVI World Map</h1>
-        <p class="subtitle">Normalized Difference Vegetation Index - Global Vegetation Health</p>
+        <h1>🌲 Global Forest Density & NDVI Map 🌍</h1>
+        <p class="subtitle">Real-time Vegetation Tracking with NASA Satellite Data</p>
     </header>
     
     <div class="map-container">
         <div id="map"></div>
         <div class="legend">
-            <h4>NDVI Scale</h4>
+            <h4>Forest Density</h4>
             <div class="legend-item">
-                <div class="legend-color" style="background: #8B4513;"></div>
-                <span>-1.0 to -0.1 (Water/Snow)</span>
+                <div class="legend-color" style="background: #004d00;"></div>
+                <span>0.8-1.0 Very Dense</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #D2B48C;"></div>
-                <span>0.0 to 0.2 (Bare Soil)</span>
+                <div class="legend-color" style="background: #006600;"></div>
+                <span>0.6-0.8 Dense</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #F0E68C;"></div>
-                <span>0.2 to 0.4 (Sparse Veg)</span>
+                <div class="legend-color" style="background: #009900;"></div>
+                <span>0.4-0.6 Moderate</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #90EE90;"></div>
-                <span>0.4 to 0.6 (Moderate Veg)</span>
+                <div class="legend-color" style="background: #66cc66;"></div>
+                <span>0.2-0.4 Sparse</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #228B22;"></div>
-                <span>0.6 to 0.8 (Dense Veg)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #006400;"></div>
-                <span>0.8 to 1.0 (Very Dense)</span>
+                <div class="legend-color" style="background: #ccffcc;"></div>
+                <span>0.0-0.2 Very Sparse</span>
             </div>
         </div>
         <div class="loading" id="loading">
-            <p>Loading NDVI data...</p>
+            <p>Loading satellite data...</p>
         </div>
     </div>
     
     <div class="controls">
         <div class="control-group">
-            <label for="dateInput">Date (YYYY-MM-DD):</label>
-            <input type="date" id="dateInput" value="2023-07-01">
-            <div class="date-suggestions">Try: 2023-07-01, 2023-01-01, 2024-06-01</div>
+            <label for="dateInput">Satellite Date:</label>
+            <input type="date" id="dateInput" value="2024-07-01">
         </div>
         <div class="control-group">
-            <label for="productSelect">Satellite Product:</label>
+            <label for="productSelect">Layer:</label>
             <select id="productSelect">
-                <option value="MODIS_Terra_NDVI_8Day">MODIS Terra NDVI (8-Day)</option>
-                <option value="MODIS_Aqua_NDVI_8Day">MODIS Aqua NDVI (8-Day)</option>
-                <option value="VIIRS_NOAA20_NDVI_8Day">VIIRS NOAA-20 NDVI (8-Day)</option>
+                <option value="MODIS_Terra_NDVI">MODIS NDVI</option>
+                <option value="MODIS_Terra_EVI">MODIS EVI</option>
+                <option value="VIIRS_NOAA20_EVI">VIIRS EVI</option>
             </select>
         </div>
-        <button id="loadBtn">Load NDVI Data</button>
+        <button id="loadBtn">Load Satellite Layer</button>
+        <button id="togglePoints">Toggle Forest Points</button>
+        <button id="regenerate">Regenerate Points</button>
     </div>
 
     <div class="info-box">
-        <div id="statusMessage" class="status-message"></div>
-        <h3>About NDVI (Normalized Difference Vegetation Index)</h3>
-        <p><strong>What is NDVI?</strong> NDVI is a numerical indicator that uses the visible and near-infrared bands of the electromagnetic spectrum to analyze remote sensing measurements and assess whether the target being observed contains live green vegetation.</p>
-        <p><strong>Scale:</strong> NDVI values range from -1 to +1. Higher values (0.6-0.9) indicate dense, healthy vegetation. Lower values (0.2-0.4) indicate sparse vegetation, and values near 0 or negative indicate non-vegetated surfaces like water, snow, or bare soil.</p>
-        <p><strong>Data Source:</strong> NASA MODIS (Moderate Resolution Imaging Spectroradiometer) and VIIRS (Visible Infrared Imaging Radiometer Suite) satellites provide global NDVI data through NASA's GIBS (Global Imagery Browse Services).</p>
-        <p><strong>How to use:</strong> Select a date and satellite product, then click "Load NDVI Data". The imagery updates every 8 days. Dates must align with available satellite passes. Click anywhere on the map to see estimated NDVI values.</p>
-        <p><strong>Note:</strong> GIBS is an open service and does not require authentication. If data doesn't load, try a date from early-to-mid 2023 or 2024.</p>
+        <div id="statusMessage" class="status-message info">
+            Map loaded with <span id="pointCount">0</span> forest monitoring points. Click any point for details.
+        </div>
+        <div class="stats">
+            <div class="stat-card">
+                <strong>Very Dense Forests</strong>
+                <span id="veryDense">0</span> locations
+            </div>
+            <div class="stat-card">
+                <strong>Dense Forests</strong>
+                <span id="dense">0</span> locations
+            </div>
+            <div class="stat-card">
+                <strong>Moderate Vegetation</strong>
+                <span id="moderate">0</span> locations
+            </div>
+            <div class="stat-card">
+                <strong>Sparse Vegetation</strong>
+                <span id="sparse">0</span> locations
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
 // Initialize the map
-const map = L.map('map').setView([20, 0], 2);
+const map = L.map('map').setView([10, 0], 2);
 
 // Add base OpenStreetMap layer
-const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
     minZoom: 2
 }).addTo(map);
 
 let ndviLayer = null;
-let errorShown = false;
+let forestLayer = null;
+let pointsVisible = true;
 
-// Function to get NDVI color based on value
-function getNDVIColor(value) {
-    if (value < 0) return '#8B4513';
-    if (value < 0.2) return '#D2B48C';
-    if (value < 0.4) return '#F0E68C';
-    if (value < 0.6) return '#90EE90';
-    if (value < 0.8) return '#228B22';
-    return '#006400';
+// Function to get color based on density
+function getColor(density) {
+    return density > 0.8 ? '#004d00' :
+           density > 0.6 ? '#006600' :
+           density > 0.4 ? '#009900' :
+           density > 0.2 ? '#66cc66' :
+                           '#ccffcc';
 }
 
-// Function to show status message
-function showStatus(message, type) {
-    const statusEl = document.getElementById('statusMessage');
-    statusEl.textContent = message;
-    statusEl.className = `status-message ${type}`;
+// Function to get category name
+function getCategory(density) {
+    return density > 0.8 ? 'Very Dense Forest' :
+           density > 0.6 ? 'Dense Forest' :
+           density > 0.4 ? 'Moderate Vegetation' :
+           density > 0.2 ? 'Sparse Vegetation' :
+                           'Very Sparse Vegetation';
+}
+
+// Generate comprehensive forest data points
+function generateForestData() {
+    const features = [];
     
-    if (type === 'success' || type === 'info') {
-        setTimeout(() => {
-            statusEl.className = 'status-message';
-        }, 5000);
-    }
+    // Major forest regions with realistic coordinates
+    const forestRegions = [
+        // Amazon Rainforest
+        { name: "Amazon Basin", baseLat: -5, baseLng: -60, spread: 15, count: 80, baseDensity: 0.85 },
+        // Congo Rainforest
+        { name: "Congo Basin", baseLat: 0, baseLng: 20, spread: 10, count: 60, baseDensity: 0.8 },
+        // Southeast Asian Forests
+        { name: "Southeast Asia", baseLat: 5, baseLng: 105, spread: 12, count: 50, baseDensity: 0.75 },
+        // Borneo & Indonesia
+        { name: "Borneo", baseLat: 0, baseLng: 115, spread: 8, count: 40, baseDensity: 0.82 },
+        // Madagascar
+        { name: "Madagascar", baseLat: -18, baseLng: 47, spread: 5, count: 25, baseDensity: 0.65 },
+        // Australian forests
+        { name: "Australia", baseLat: -25, baseLng: 145, spread: 10, count: 30, baseDensity: 0.45 },
+        // North American forests
+        { name: "Pacific Northwest", baseLat: 48, baseLng: -122, spread: 8, count: 35, baseDensity: 0.7 },
+        { name: "Eastern US", baseLat: 38, baseLng: -82, spread: 10, count: 40, baseDensity: 0.55 },
+        { name: "Canadian Boreal", baseLat: 55, baseLng: -100, spread: 20, count: 50, baseDensity: 0.6 },
+        // European forests
+        { name: "Scandinavia", baseLat: 62, baseLng: 15, spread: 8, count: 30, baseDensity: 0.65 },
+        { name: "Central Europe", baseLat: 50, baseLng: 10, spread: 8, count: 25, baseDensity: 0.5 },
+        // Russian taiga
+        { name: "Siberian Taiga", baseLat: 60, baseLng: 90, spread: 25, count: 60, baseDensity: 0.58 },
+        // South American other
+        { name: "Atlantic Forest", baseLat: -23, baseLng: -45, spread: 6, count: 30, baseDensity: 0.72 },
+        { name: "Chilean Forests", baseLat: -40, baseLng: -72, spread: 8, count: 25, baseDensity: 0.68 },
+        // African savannas & forests
+        { name: "West Africa", baseLat: 8, baseLng: 0, spread: 8, count: 35, baseDensity: 0.55 },
+        { name: "East Africa", baseLat: -2, baseLng: 35, spread: 6, count: 20, baseDensity: 0.42 },
+        // Indian subcontinent
+        { name: "Western Ghats", baseLat: 12, baseLng: 76, spread: 5, count: 25, baseDensity: 0.7 },
+        { name: "Northeast India", baseLat: 26, baseLng: 92, spread: 4, count: 20, baseDensity: 0.73 },
+        // China & Japan
+        { name: "Southern China", baseLat: 28, baseLng: 110, spread: 8, count: 35, baseDensity: 0.62 },
+        { name: "Japan", baseLat: 37, baseLng: 138, spread: 5, count: 20, baseDensity: 0.66 },
+        // Central America
+        { name: "Central America", baseLat: 12, baseLng: -85, spread: 6, count: 30, baseDensity: 0.74 },
+        // New Guinea
+        { name: "New Guinea", baseLat: -5, baseLng: 145, spread: 6, count: 35, baseDensity: 0.83 }
+    ];
+    
+    forestRegions.forEach(region => {
+        for (let i = 0; i < region.count; i++) {
+            // Generate random point within region
+            const lat = region.baseLat + (Math.random() - 0.5) * region.spread * 2;
+            const lng = region.baseLng + (Math.random() - 0.5) * region.spread * 2;
+            
+            // Add some variation to density
+            const density = Math.max(0.1, Math.min(1.0, 
+                region.baseDensity + (Math.random() - 0.5) * 0.3
+            ));
+            
+            features.push({
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [lng, lat]
+                },
+                properties: {
+                    name: `${region.name} Site ${i + 1}`,
+                    region: region.name,
+                    density: parseFloat(density.toFixed(2)),
+                    category: getCategory(density)
+                }
+            });
+        }
+    });
+    
+    return {
+        type: "FeatureCollection",
+        features: features
+    };
 }
 
-// Function to load NDVI layer from NASA GIBS
+// Function to create and display forest points
+function displayForestPoints() {
+    // Remove existing layer if present
+    if (forestLayer) {
+        map.removeLayer(forestLayer);
+    }
+    
+    const forestData = generateForestData();
+    
+    // Count by category
+    let veryDense = 0, dense = 0, moderate = 0, sparse = 0;
+    
+    forestLayer = L.geoJSON(forestData, {
+        pointToLayer: function (feature, latlng) {
+            const density = feature.properties.density;
+            
+            // Count categories
+            if (density > 0.8) veryDense++;
+            else if (density > 0.6) dense++;
+            else if (density > 0.4) moderate++;
+            else if (density > 0.2) sparse++;
+            
+            return L.circleMarker(latlng, {
+                radius: 6 + (density * 6), // Size based on density
+                fillColor: getColor(density),
+                color: "#fff",
+                weight: 1.5,
+                opacity: 1,
+                fillOpacity: 0.75
+            });
+        },
+        onEachFeature: function (feature, layer) {
+            const props = feature.properties;
+            layer.bindPopup(`
+                <b>${props.name}</b><br>
+                <b>Region:</b> ${props.region}<br>
+                <b>Forest Density:</b> ${props.density}<br>
+                <b>Category:</b> ${props.category}<br>
+                <b>Coordinates:</b> ${feature.geometry.coordinates[1].toFixed(2)}, ${feature.geometry.coordinates[0].toFixed(2)}
+            `);
+            
+            // Hover effect
+            layer.on('mouseover', function() {
+                this.setStyle({
+                    weight: 3,
+                    fillOpacity: 1
+                });
+            });
+            
+            layer.on('mouseout', function() {
+                this.setStyle({
+                    weight: 1.5,
+                    fillOpacity: 0.75
+                });
+            });
+        }
+    }).addTo(map);
+    
+    // Update stats
+    document.getElementById('pointCount').textContent = forestData.features.length;
+    document.getElementById('veryDense').textContent = veryDense;
+    document.getElementById('dense').textContent = dense;
+    document.getElementById('moderate').textContent = moderate;
+    document.getElementById('sparse').textContent = sparse;
+}
+
+// Function to load NASA NDVI layer
 function loadNDVILayer() {
     const dateInput = document.getElementById('dateInput').value;
-    const date = dateInput.replace(/-/g, '');
     const product = document.getElementById('productSelect').value;
     const loading = document.getElementById('loading');
     
@@ -331,130 +486,240 @@ function loadNDVILayer() {
     }
     
     loading.classList.add('active');
-    showStatus('Loading NDVI data...', 'info');
     
     // Remove existing NDVI layer if present
     if (ndviLayer) {
         map.removeLayer(ndviLayer);
     }
     
-    // NASA GIBS WMTS endpoint - note these are OPEN and don't require auth
-    const gibsUrl = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${product}/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png`;
+    // NASA GIBS WMS endpoint
+    const gibsWmsUrl = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
     
-    ndviLayer = L.tileLayer(gibsUrl, {
+    ndviLayer = L.tileLayer.wms(gibsWmsUrl, {
+        layers: product,
+        format: 'image/png',
+        transparent: true,
+        version: '1.3.0',
+        time: dateInput,
         attribution: 'NASA EOSDIS GIBS',
-        maxZoom: 9,
-        minZoom: 2,
-        opacity: 0.75,
-        tileSize: 256
+        opacity: 0.5,
+        maxZoom: 10,
+        minZoom: 2
     });
     
-    let tilesLoaded = 0;
-    let tilesErrored = 0;
+    let loaded = false;
     
-    ndviLayer.on('tileloadstart', function() {
-        // Track loading
-    });
-    
-    ndviLayer.on('tileload', function() {
-        tilesLoaded++;
-        if (tilesLoaded === 1) {
+    ndviLayer.on('load', function() {
+        if (!loaded) {
+            loaded = true;
             loading.classList.remove('active');
-            showStatus(`NDVI data loaded successfully for ${dateInput}!`, 'success');
-            errorShown = false;
+            showStatus(`Satellite data loaded for ${dateInput}`, 'success');
         }
     });
     
-    ndviLayer.on('tileerror', function(error) {
-        tilesErrored++;
-        console.error('Tile loading error:', error);
-        
-        if (tilesErrored === 3 && tilesLoaded === 0) {
-            loading.classList.remove('active');
-            if (!errorShown) {
-                errorShown = true;
-                showStatus(`No NDVI data available for ${dateInput}. Try dates from 2023 like 2023-07-01, 2023-01-01, or 2024-06-01. Data is available every 8 days.`, 'error');
-            }
-        }
+    ndviLayer.on('tileerror', function() {
+        loading.classList.remove('active');
+        showStatus(`Could not load satellite data for ${dateInput}. Try a different date.`, 'error');
     });
     
     ndviLayer.addTo(map);
     
-    // Timeout fallback
     setTimeout(() => {
-        if (tilesLoaded === 0) {
-            loading.classList.remove('active');
-            if (!errorShown) {
-                errorShown = true;
-                showStatus(`Could not load data for ${dateInput}. MODIS/VIIRS data may not be available for this specific date. Try 2023-07-01 or check NASA Worldview for available dates.`, 'error');
-            }
-        }
-    }, 8000);
+        loading.classList.remove('active');
+    }, 5000);
 }
 
-// Add click event to show coordinates and estimated NDVI
-map.on('click', function(e) {
-    const lat = e.latlng.lat.toFixed(4);
-    const lng = e.latlng.lng.toFixed(4);
-    
-    // Simulate NDVI value based on latitude and climate zones
-    let estimatedNDVI = 0;
-    const absLat = Math.abs(e.latlng.lat);
-    
-    if (absLat < 10) {
-        estimatedNDVI = 0.6 + Math.random() * 0.3;
-    } else if (absLat < 30) {
-        estimatedNDVI = 0.3 + Math.random() * 0.4;
-    } else if (absLat < 60) {
-        estimatedNDVI = 0.4 + Math.random() * 0.3;
-    } else {
-        estimatedNDVI = 0.1 + Math.random() * 0.2;
+// Function to show status
+function showStatus(message, type) {
+    const statusEl = document.getElementById('statusMessage');
+    statusEl.innerHTML = message;
+    statusEl.className = `status-message ${type}`;
+}
+
+// Event listeners
+document.getElementById('loadBtn').addEventListener('click', loadNDVILayer);
+
+document.getElementById('togglePoints').addEventListener('click', function() {
+    if (forestLayer) {
+        if (pointsVisible) {
+            map.removeLayer(forestLayer);
+            this.textContent = 'Show Forest Points';
+        } else {
+            forestLayer.addTo(map);
+            this.textContent = 'Hide Forest Points';
+        }
+        pointsVisible = !pointsVisible;
     }
-    
-    const ndviValue = estimatedNDVI.toFixed(3);
-    const color = getNDVIColor(parseFloat(ndviValue));
-    
-    L.popup()
-        .setLatLng(e.latlng)
-        .setContent(`
-            <b>Location</b><br>
-            Latitude: ${lat}<br>
-            Longitude: ${lng}<br>
-            <br>
-            <b style="color: ${color}">Estimated NDVI: ${ndviValue}</b><br>
-            <small>(Simulated based on latitude)</small>
-        `)
-        .openOn(map);
 });
 
-// Load button event
-document.getElementById('loadBtn').addEventListener('click', function() {
-    errorShown = false;
-    loadNDVILayer();
+document.getElementById('regenerate').addEventListener('click', function() {
+    displayForestPoints();
+    showStatus('Forest monitoring points regenerated!', 'success');
 });
 
-// Set reasonable date limits
+// Set date limits
 const today = new Date();
-const maxDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+const maxDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
 document.getElementById('dateInput').max = maxDate.toISOString().split('T')[0];
-document.getElementById('dateInput').min = '2000-01-01';
+document.getElementById('dateInput').min = '2020-01-01';
 
-// Load initial NDVI layer
-loadNDVILayer();
+// Initialize
+displayForestPoints();
+setTimeout(() => loadNDVILayer(), 500);
+    </script>
+</body>
+</html> -->
 
-// Add some example markers for reference locations
-const referenceLocations = [
-    { name: 'Amazon Rainforest', coords: [-3.4653, -62.2159], type: 'Dense Vegetation' },
-    { name: 'Sahara Desert', coords: [23.4162, 25.6628], type: 'Sparse Vegetation' },
-    { name: 'Greenland Ice Sheet', coords: [72.0, -40.0], type: 'Ice/Snow' },
-    { name: 'Great Plains, USA', coords: [41.8781, -103.4595], type: 'Agricultural' }
-];
+<!---->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Earthdata Worldview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 14, 39, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 280px;
+        }
+        .controls h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #4da6ff;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        .control-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #b0b8cc;
+        }
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .control-group select option {
+            background: #1a1f3a;
+            color: #fff;
+        }
+        .info {
+            font-size: 11px;
+            color: #8892a6;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .leaflet-control-attribution {
+            background: rgba(10, 14, 39, 0.8) !important;
+            color: #b0b8cc !important;
+        }
+        .leaflet-control-attribution a {
+            color: #4da6ff !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="controls">
+        <h2>🛰️ NASA Earthdata</h2>
+        
+        <div class="control-group">
+            <label for="layerSelect">Imagery Layer</label>
+            <select id="layerSelect">
+                <option value="VIIRS_SNPP_CorrectedReflectance_TrueColor">VIIRS True Color</option>
+                <option value="MODIS_Terra_CorrectedReflectance_TrueColor">MODIS Terra True Color</option>
+                <option value="MODIS_Aqua_CorrectedReflectance_TrueColor">MODIS Aqua True Color</option>
+                <option value="VIIRS_SNPP_CorrectedReflectance_BandsM11-I2-I1">VIIRS False Color</option>
+                <option value="MODIS_Terra_Land_Surface_Temp_Day">Land Surface Temp (Day)</option>
+            </select>
+        </div>
+        
+        <div class="info">
+            <strong>About:</strong> NASA's Global Imagery Browse Services (GIBS) provides satellite imagery from various NASA missions. Data is typically 1-2 days behind real-time.
+        </div>
+    </div>
 
-referenceLocations.forEach(location => {
-    L.marker(location.coords)
-        .addTo(map)
-        .bindPopup(`<b>${location.name}</b><br><i>${location.type}</i>`);
-});
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Get today's date in YYYY-MM-DD format (going back 2 days for data availability)
+        const getDate = () => {
+            const d = new Date();
+            d.setDate(d.getDate() - 2);
+            return d.toISOString().split('T')[0];
+        };
+
+        const date = getDate();
+        
+        // Initialize map
+        const map = L.map('map', {
+            center: [20, 0],
+            zoom: 3,
+            minZoom: 2,
+            maxZoom: 9
+        });
+
+        // GIBS tile layer template
+        const createGIBSLayer = (layer) => {
+            return L.tileLayer(
+                `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
+                {
+                    attribution: '© NASA EOSDIS GIBS',
+                    tileSize: 256,
+                    noWrap: true,
+                    bounds: [[-85.0511, -180], [85.0511, 180]]
+                }
+            );
+        };
+
+        // Initial layer
+        let currentLayer = createGIBSLayer('VIIRS_SNPP_CorrectedReflectance_TrueColor');
+        currentLayer.addTo(map);
+
+        // Layer selector
+        document.getElementById('layerSelect').addEventListener('change', (e) => {
+            map.removeLayer(currentLayer);
+            currentLayer = createGIBSLayer(e.target.value);
+            currentLayer.addTo(map);
+        });
+
+        // Add scale
+        L.control.scale({imperial: true, metric: true}).addTo(map);
     </script>
 </body>
 </html>
