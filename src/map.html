@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Earthdata Worldview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(10, 14, 39, 0.95);
+            padding: 12px;                 /* was 20px */
+            border-radius: 10px;           /* was 12px */
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0,0,0,.35);
+            border: 1px solid rgba(255,255,255,.08);
+            min-width: 220px;              /* was 280px */
+            width: clamp(220px, 28vw, 380px); /* responsive max */
+        }
+
+        .controls h2 {
+            font-size: 16px;               /* was 18px */
+            margin-bottom: 10px;
+        }
+
+        .control-group { margin-bottom: 10px; }
+        .control-group label { font-size: 12px; }
+        .control-group select {
+            width: 100%;
+            padding: 6px 8px;              /* was 8px */
+            border-radius: 8px;            /* was 6px */
+            font-size: 12px;               /* was 13px */
+        }
+        .info { font-size: 10px; }
+        .leaflet-control-attribution {
+            background: rgba(10, 14, 39, 0.8) !important;
+            color: #b0b8cc !important;
+        }
+        .leaflet-control-attribution a {
+            color: #4da6ff !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="controls">
+        <h2>🛰️ NASA Earthdata</h2>
+        
+        <div class="control-group">
+            <label for="layerSelect">Imagery Layer</label>
+            <select id="layerSelect">
+                <option value="General Sapce map">Air Temperature (Day) - Thermal</option>
+                <option value="MODIS_Terra_NDVI_8Day">NDVI (8-Day)</option>
+            </select>
+        </div>
+        
+        <div class="info">
+            <strong>About:</strong> NASA's Global Imagery Browse Services (GIBS) provides satellite imagery from various NASA missions. Data is typically 1-2 days behind real-time.
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Get today's date in YYYY-MM-DD format (going back 2 days for data availability)
+        const getDate = () => {
+            const d = new Date();
+            d.setDate(d.getDate() - 2);
+            return d.toISOString().split('T')[0];
+        };
+
+        const date = getDate();
+        
+        // Initialize map
+        const map = L.map('map', {
+            center: [20, 0],
+            zoom: 3,
+            minZoom: 2,
+            maxZoom: 9
+        });
+
+        // GIBS tile layer template
+        const createGIBSLayer = (layer) => {
+            return L.tileLayer(
+                `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
+                {
+                    attribution: '© NASA EOSDIS GIBS',
+                    tileSize: 256,
+                    noWrap: true,
+                    bounds: [[-85.0511, -180], [85.0511, 180]]
+                }
+            );
+        };
+
+        // Initial layer
+        let currentLayer = createGIBSLayer('VIIRS_SNPP_CorrectedReflectance_TrueColor');
+        currentLayer.addTo(map);
+
+        // Layer selector
+        document.getElementById('layerSelect').addEventListener('change', (e) => {
+            map.removeLayer(currentLayer);
+            currentLayer = createGIBSLayer(e.target.value);
+            currentLayer.addTo(map);
+        });
+
+        // Add scale
+        L.control.scale({imperial: true, metric: true}).addTo(map);
+    </script>
+</body>
+</html>
