@@ -1,42 +1,57 @@
-import boto3
-import json
 from fastapi import FastAPI
-from agents import Agent, Runner, function_tool
-from agent.prompt import SYSTEM_PROMPT
-from dotenv import load_dotenv
-import os
+from fastapi.middleware.cors import CORSMiddleware
+from models.data_manager import DataManager
+from routes import statistics, predictions, analysis
 
-load_dotenv()
+app = FastAPI(title="Forest Cover Analysis API", version="1.0.0")
 
-app = FastAPI()
-s3_client = boto3.client("s3")
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+# Initialize data manager
+data_manager = DataManager()
 
-@function_tool
-def get_ndvi_data_from_s3(region: str, year: int):
-    s3_key = f"ndvi_results/{region}/{year}.json" # This might be subject to change based on how team implements S3
+@app.on_event("startup")
+async def startup_event():
+    """Load data on startup"""
     try:
-        obj = s3_client.get_object(Bucket=BUCKET_NAME, Key=s3_key)
-        data = json.loads(obj["Body"].read())
-        return data
-    except s3_client.exceptions.NoSuchKey:
-        return {"error": f"No NDVI data found for {region} {year}"}
+        data_manager.initialize()
+        if data_manager.is_initialized():
+            print("✓ Data loaded successfully")
+        else:
+            print("✗ Data initialization failed")
     except Exception as e:
-        return {"error": str(e)}
+        print(f"✗ Error during startup: {e}")
+        import traceback
+        traceback.print_exc()
 
-@app.get("/overview")
-async def get_ai_overview(region: str, year: int):
-    instructions = SYSTEM_PROMPT.format(input_region=region, input_year=year)
+# Include routers
+app.include_router(statistics.router, prefix="/api/statistics", tags=["statistics"])
+app.include_router(predictions.router, prefix="/api/predictions", tags=["predictions"])
+app.include_router(analysis.router, prefix="/api/analysis", tags=["analysis"])
 
-    ai_overview_agent = Agent(
-        name="AI-Overview",
-        instructions=instructions,
-        tools=[get_ndvi_data_from_s3]
-    )
+@app.get("/")
+async def root():
+    return {
+        "message": "Forest Cover Analysis API",
+        "version": "1.0.0",
+        "endpoints": {
+            "statistics": "/api/statistics",
+            "predictions": "/api/predictions",
+            "analysis": "/api/analysis"
+        }
+    }
 
-    # Runner.run requires an input string, even if the tool provides real data
-    user_input = f"Generate NDVI overview for {region} {year}"
-    result = await Runner.run(ai_overview_agent, user_input)
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "data_loaded": data_manager.is_initialized()
+    }
 
-    return {"overview": result.final_output}
