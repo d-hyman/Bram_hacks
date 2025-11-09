@@ -6,7 +6,7 @@ function App() {
   return (
     <>
       <Header/>
-      <FactsBar /> git
+      <FactsBar /> 
       <main>
         <MapFrame />
       </main>
