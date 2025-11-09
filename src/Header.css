@@ -69,7 +69,9 @@ body { margin: 0; }
   margin-bottom: clamp(2px, 1.0vw, 2px);/* card → map  (less)  */
 }
 
-.map-wrap{ margin-top: 0; }
+.map-wrap{ 
+  margin-top: clamp(20px, 2vw, 30px); 
+}
 .stats-card h2{
   margin: 0 0 10px 0;          /* same spacing as controls */
   font-size: 16px;
@@ -117,17 +119,7 @@ body { margin: 0; }
   border: 0;
 }
 
-.facts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: clamp(12px, 1.6vw, 22px);
-
-  /* existing */
-  margin: 0 0 clamp(14px, 2vw, 22px);
-
-  /* NEW — space between navbar and cards */
-  margin-top: clamp(20px, 2vw, 40px);
-}
+/* FactsBar removed - no longer used */
 
 /* card style matches your NASA-style panel */
 .fact-card{

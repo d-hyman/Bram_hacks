@@ -1,13 +1,13 @@
 import Header from "./Header.jsx";
-import FactsBar from "./FactsBar.jsx";
+import CountryYearQuery from "./CountryYearQuery.jsx";
 import MapFrame from "./MapFrame.jsx";
 
 function App() {
   return (
     <>
       <Header/>
-      <FactsBar /> 
       <main>
+        <CountryYearQuery />
         <MapFrame />
       </main>
     </>
