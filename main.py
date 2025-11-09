@@ -42,6 +42,7 @@ print(df.info())
 
 print("\n3. MISSING VALUES SUMMARY")
 print("-" * 80)
+## Calculate missing values
 missing = df.isnull().sum()
 missing_percent = (missing / len(df)) * 100
 missing_df = pd.DataFrame({
