@@ -223,11 +223,24 @@
       }
     }
 
-    function goToToday(){
-      const t = snapDateForLayer(todayUTC(), layerSelect.value);
+    function goToToday() {
+      const layerId = layerSelect.value;
+
+      // If NDVI layer: force jump to October 23
+      if (layerId === "MODIS_Terra_L3_NDVI_16Day") {
+        const forced = parseISOUTC("2025-10-23");
+        const snapped = snapDateForLayer(forced, layerId);
+        snapSliderTo(snapped);
+        updateMap();
+        return;
+      }
+
+      // Otherwise: normal behavior
+      const t = snapDateForLayer(todayUTC(), layerId);
       snapSliderTo(t);
       updateMap();
     }
+
 
     // ===== Events =====
     timeSlider.addEventListener('input', ()=>{
