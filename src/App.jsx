@@ -6,7 +6,7 @@ function App() {
   return (
     <>
       <Header/>
-      <FactsBar />
+      <FactsBar /> 
       <main>
         <MapFrame />
       </main>
